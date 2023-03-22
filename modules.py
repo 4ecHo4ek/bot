@@ -7,8 +7,9 @@ import math
 import telebot
 import sys
 
-import commonFuncs as common
+
+
 # import commonFunc as common
 # import readFile as fileReader
-# import classes as classes
+
 
