@@ -51,4 +51,34 @@ class DictsSaver:
         self.coinsDictLastPrice = coinsDictLastPrice
 
 
-        
+class CoinPairBasic:
+    def __init__(self, pairName, lastPrice, volume, quoteVolume, time) -> None:
+        self.pairName = pairName # название пары
+        self.lastPrice = lastPrice # цена 
+        self.volume = volume # объем торгов 1ой монеты
+        self.quoteVolume = quoteVolume # объем торгов 2ой монеты
+
+
+class CoinSearcher:
+    def __init__(self, pairName: str, coinPairData: dict, timeAndMaxPersentDict: dict) -> None:
+        self.pairName = pairName
+        # храним предыдущее значение для сравнения
+        self.coinPairData = coinPairData
+        # словарь для хранения времени и максимального процента, который был относительно этого времени (для уменьшения повторных срабатываний)
+        self.timeAndMaxPersentDict = timeAndMaxPersentDict
+
+
+# запоминаем крайние значения для сверки с последующим
+class TmpPairInfo:
+    def __init__(self, maxPercent: float, tBegin: str, tEnd: str, typeOfValue: str) -> None:
+        self.maxPercent = maxPercent
+        self.tBegin = tBegin
+        self.tEnd = tEnd
+        self.typeOfValue = typeOfValue
+
+    def clean(self):
+        self.maxPercent = 0
+        self.tBegin = ""
+        self.tEnd = ""
+        self.typeOfValue = ""
+                
