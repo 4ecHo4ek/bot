@@ -1,6 +1,5 @@
 import modules as mod
-import internalClasses as inClass
-
+import classes as classes
 
 def trimString(string: str) -> str:
     string = string[string.find(":") + 1:]
@@ -42,8 +41,8 @@ def getDataFromFile(fileName: str):
             with open(fileName,'r') as file:
                 lines = file.readlines()
                 (workingInfoDict, botClassDict) = findDataInReadedFile(lines)
-                workingInfo = inClass.classes.WorkingInfo(workingInfoDict["delimeter"], workingInfoDict["deltaPercent"], workingInfoDict["logFile"], workingInfoDict["maxPersent"], workingInfoDict["steps"], workingInfoDict["api_key"], workingInfoDict["api_secret"])
-                bot = inClass.classes.BotClass(botClassDict["telegram_token"], botClassDict["chat_id"])
+                workingInfo = classes.WorkingInfo(workingInfoDict["delimeter"], workingInfoDict["deltaPercent"], workingInfoDict["logFile"], workingInfoDict["maxPersent"], workingInfoDict["steps"], workingInfoDict["api_key"], workingInfoDict["api_secret"])
+                bot = classes.BotClass(botClassDict["telegram_token"], botClassDict["chat_id"])
             return(errMessage, err, workingInfo, bot)
         except:
             errMessage = f"could read fild {fileName}\n"
@@ -69,24 +68,24 @@ def writeLog(logFile, type, message):
     mod.os.system(f"echo {message} >> logs\\{logFile}")
 
 
-def createNewElements(pairName: str, coinsDicts: inClass.classes.DictsSaver) -> inClass.classes.DictsSaver:
+def createDictsSaverElements(pairName: str, coinsDicts: classes.DictsSaver):
     # если в словаре нет ключа с такой парой
     if not pairName in coinsDicts.coinsDictVolume:
         # присваиваем этому ключу экземпляр класса
-        coinsDicts.coinsDictVolume[pairName] = inClass.classes.CoinSearcher(pairName, {}, {})
+        coinsDicts.coinsDictVolume[pairName] = classes.CoinSearcher(pairName, {}, {})
     if not pairName in coinsDicts.coinsDictLastPrice:
-        coinsDicts.coinsDictLastPrice[pairName] = inClass.classes.CoinSearcher(pairName, {}, {})
+        coinsDicts.coinsDictLastPrice[pairName] = classes.CoinSearcher(pairName, {}, {})
     return(coinsDicts)
 
 
 def getInfoFromDictOfPairs(pair: dict):
     pairName = pair['symbol']
     if float(pair['bidPrice']) == 0.00000000:
-            return(None, f"{pairName} does not trade!", 2)
+            return(None, f"{pairName} does not trade!", 3)
     lastPrice = round(float(pair['lastPrice']), 2)
     volume = round(float(pair['volume']), 2)
     quoteVolume = round(float(pair['quoteVolume']), 2)
-    pairInfo = inClass.classes.CoinPairBasic(pairName, lastPrice, volume, quoteVolume)
+    pairInfo = classes.CoinPairBasic(pairName, lastPrice, volume, quoteVolume)
     return(pairInfo, None, 0)
 
 
@@ -97,7 +96,7 @@ def getInfo(client: mod.Client):
         pairs = mod.Client.ticker_24hr(client)
     except:
         return(None, "Could not get info from server", 2)
-    return(pairs, "",0)
+    return(pairs, "", 0)
 
 
 def waitNewMinute():
@@ -108,9 +107,9 @@ def waitNewMinute():
 
 
 
-def getConnectionsToResources(bot: inClass.classes.BotClass, workingInfo: inClass.classes.WorkingInfo):
+def getConnectionsToResources(bot: classes.BotClass, workingInfo: classes.WorkingInfo):
     try:
-        bot = inClass.classes.BotClass(bot.telegram_token, bot.chat_id)
+        bot = classes.BotClass(bot.telegram_token, bot.chat_id)
     except:
         return(None, None, "Could not connect to bot", 1)
     try:
@@ -118,5 +117,48 @@ def getConnectionsToResources(bot: inClass.classes.BotClass, workingInfo: inClas
     except:
         return(None, None, f"Could not connect to server {client}", 1)
     return(bot, client, "", 0)
+
+
+def checkBeginig(coinPairData: dict, data: float, time: str):
+    err = 0
+    if len(coinPairData) == 0:
+        coinPairData[time] = data
+        err = 3
+    return(coinPairData, err)
+
+
+def getLastValueFromDict(coinPairData: dict):
+    '''
+    словарь пуст: err = 2
+    крайний элемент = 0: err = 3
+    все хорошо: err = 0
+    '''
+    err = 0
+    try:
+        [lastValueTime] = mod.collections.deque(coinPairData, maxlen=1)
+        lastValue = coinPairData[lastValueTime]
+    except:
+        return(None, None, "", 2)
+    if lastValue == 0:
+        err == 3
+    return(lastValueTime, lastValue, "", err)
+
+
+def calcPersent(currentValue: float, lastValue: float):
+    return(round(float(1 - currentValue / lastValue), 2))
+
+
+
+def trimDict(trimedDict: dict, delimeter: int):
+    if len(trimedDict) > delimeter:
+        lenOfDict = len(trimedDict)
+        tmpList = list(trimedDict)
+        delItem = tmpList[lenOfDict - delimeter]
+        for item in list(trimedDict.keys()):
+            if item == delItem:
+                break
+            trimedDict.pop(item)
+    return(trimedDict)
+
 
 

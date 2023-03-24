@@ -3,9 +3,9 @@ import modules as mod
 # рабочая информация о настройках поиска и работы
 class WorkingInfo:
     def __init__(self, delimeter: int, deltaPercent: float, logFileName: str, maxPersent: float, steps: int, api_key: str, api_secret: str) -> None:
-        # макисмальный рассматриваемый диапазон по времени
+        # макисмальный рассматриваемый диапазон по времени в минутах
         self.delimeter = delimeter
-        # разница в проценте, после которой обращаем внимание
+        # разница в проценте, после которой обращаем вниманиеб пока не используется
         self.deltaPercent = deltaPercent
         # название лог файла
         self.logFileName = logFileName
