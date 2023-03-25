@@ -26,11 +26,11 @@ class WorkingInfo:
         arrLen = int(len(self.persentArraysForLooking) / 2)
         interestArr = self.persentArraysForLooking[:arrLen + 1]
         # получаем минимальную границу, ниже которой не рассматриваем значения
-        self.notInterestingPercent = self.persentArraysForLooking[arrLen]
+        self.notInterestingPercent = round(float(self.persentArraysForLooking[arrLen]), 2)
         # в промежутке между нижней и верхней границей оповещаем только о макисмальном %, и продумать как отсеивать незначительный рост
         arrLen = int(len(interestArr) / 2)
         # получаем максимальный процент, после которого сразу оповещаеть
-        self.attentionPercent = interestArr[arrLen]
+        self.attentionPercent = round(float(interestArr[arrLen]), 2)
 
 
 class BotClass():
@@ -52,7 +52,7 @@ class DictsSaver:
 
 
 class CoinPairBasic:
-    def __init__(self, pairName, lastPrice, volume, quoteVolume, time) -> None:
+    def __init__(self, pairName, lastPrice, volume, quoteVolume) -> None:
         self.pairName = pairName # название пары
         self.lastPrice = lastPrice # цена 
         self.volume = volume # объем торгов 1ой монеты

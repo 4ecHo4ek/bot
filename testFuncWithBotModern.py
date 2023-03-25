@@ -4,63 +4,31 @@ import classes as classes
 
 
 
-
-
 def getVolumeInfo(pairInfo: classes.CoinPairBasic, workingInfo: classes.WorkingInfo, coinsDicts: classes.CoinSearcher, time: str):
     tmpInfo = classes.TmpPairInfo(0, "", "", "volume")
-    # ....
-    # coinsDictVolume - CoinSearcher
-    coinsDicts.coinPairData, err = common.checkBeginig(coinsDicts.coinPairData, pairInfo.volume, time)
-    if err == 3:
-        return(coinsDicts, "", 3)
-    lastTimeOfValue, lastValue, errMessage, err = common.getLastValueFromDict(coinsDicts.coinPairData)
-    if err == 2:
-        return(coinsDicts, "", 3)
-    elif err == 3:
-        coinsDicts.coinPairData[time] = pairInfo.volume
-        return(coinsDicts, "", 0)
-    percent = common.calcPersent(pairInfo.volume, lastValue)
-    if abs(percent) >= abs(workingInfo.notInterestingPercent):
-        coinsDicts.coinPairData[time] = pairInfo.volume
-        return(coinsDicts, "", 0)
-    if abs(percent) >= abs(workingInfo.attentionPercent):
-        coinsDicts.timeAndMaxPersentDict[time] = percent
-        # здесь должно быть оповещение
-        # bot.sendMessage(message)
-        pass
-    coinsDicts.coinPairData = common.trimDict(coinsDicts.coinPairData, workingInfo.delimeter)
-    coinsDicts.timeAndMaxPersentDict = common.trimDict(coinsDicts.timeAndMaxPersentDict, workingInfo.delimeter)
-
-
-    # coinSearcher.timeAndMaxPersentDict = findMaxInDicts(coinSearcher, tmpInfo, workingInfo, bot, data, lastValue, time)
-
-
-    coinsDicts.coinPairData[time] = pairInfo.volume
-    pass
-
-
-
-
+    coinsDicts = common.calculations(workingInfo, coinsDicts, tmpInfo, pairInfo.volume, time)
+    return(coinsDicts)
 
 
 def getLastPriceInfo(pairInfo: classes.CoinPairBasic, coinsDicts: classes.CoinSearcher, workingInfo: classes.WorkingInfo, time: str):
     tmpInfo = classes.TmpPairInfo(0, "", "", "lastPrice")
-    # ....
-    pass
+    coinsDicts = common.calculations(workingInfo, coinsDicts, tmpInfo, pairInfo.lastPrice, time)
+    return(coinsDicts)
 
 
-def sortThroughPairs(workingInfo: classes.WorkingInfo, pairs: dict, time: str):
+def sortThroughPairs(coinsDicts: classes.DictsSaver, workingInfo: classes.WorkingInfo, pairs: dict, time: str):
     for pair in pairs:
         pairInfo, errMessage, err = common.getInfoFromDictOfPairs(pair)
         if err == 3:
-            print(errMessage)
+            # print(errMessage)
             continue
         coinsDicts = common.createDictsSaverElements(pairInfo.pairName, coinsDicts)
-        # coinsDicts.coinsDictVolume[pairName] = CoinSearcher(pairName, {}, {})
         coinsDicts.coinsDictVolume[pairInfo.pairName], errMessage, err = getVolumeInfo(pairInfo, workingInfo, coinsDicts.coinsDictVolume[pairInfo.pairName], time)
-        # err
+        if err == 3:
+            continue
         coinsDicts.coinsDictLastPrice[pairInfo.pairName], errMessage, err = getLastPriceInfo(pairInfo, workingInfo, coinsDicts.coinsDictLastPrice[pairInfo.pairName], time)
-        # err
+        if err == 3:
+            continue
     return(coinsDicts) # err
 
         
@@ -74,20 +42,22 @@ def mainFunc(fileName: str) -> None:
         common.writeLog(workingInfo.logFileName, "error", errMessage)
         exit
     
-    message = f"nothing interesting less the {workingInfo.notInterestingPercent}% and much interest up {workingInfo.attentionPercent}%"
-    bot.sendMessage(message)
+    # message = f"nothing interesting less the {workingInfo.notInterestingPercent}% and much interest up {workingInfo.attentionPercent}%"
+    # bot.sendMessage(message)
+    print(f"nothing interesting less the {workingInfo.notInterestingPercent}% and much interest up {workingInfo.attentionPercent}%")
 
     coinsDicts = classes.DictsSaver({}, {})
 
     while True:
-        # common.waitNewMinute()
+        common.waitNewMinute()
         pairs, errMessage, err = common.getInfo(client)
         if err == 2:
             common.writeLog(workingInfo.logFileName, "error", errMessage)
             continue
         time = f"{mod.datetime.datetime.now().hour}:{mod.datetime.datetime.now().minute}"
-
-        mod.time.sleep(1)
+        coinsDicts = sortThroughPairs(coinsDicts, workingInfo, pairs, time)
+        # print("test")
+        mod.time.sleep(3)
 
 
         
