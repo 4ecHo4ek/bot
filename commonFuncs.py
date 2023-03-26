@@ -245,12 +245,10 @@ def calculations(workingInfo: classes.WorkingInfo, coinsDicts: classes.CoinSearc
     lastTimeOfValue, lastValue, errMessage, err = getLastValueFromDict(coinsDicts.coinPairData) # переменные нужны для формирования сообщения
     if err == 2:
         return(coinsDicts, "", 3)
-    elif err == 3:
+    elif err == 3 or lastValue == 0:
         coinsDicts.coinPairData[time] = data
         return(coinsDicts, "", 0)
     percent = calcPersent(data, lastValue)
-    #  TEST
-    testPrintMessage(f"{coinsDicts.pairName}, {percent}")
     if abs(percent) >= abs(workingInfo.notInterestingPercent):
         coinsDicts.coinPairData[time] = data
         return(coinsDicts, "", 0)

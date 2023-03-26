@@ -3,6 +3,11 @@ import commonFuncs as common
 import classes as classes
 
 
+def getVolume(workingInfo: classes.WorkingInfo, coinsDicts: classes.CoinSearcher,  data: float, time: str, type: str):
+    tmpInfo = classes.TmpPairInfo(0, "", "", type)
+    coinsDicts = common.calculations(workingInfo, coinsDicts, tmpInfo, data, time)
+    return(coinsDicts)
+
 
 def getVolumeInfo(pairInfo: classes.CoinPairBasic, workingInfo: classes.WorkingInfo, coinsDicts: classes.CoinSearcher, time: str):
     tmpInfo = classes.TmpPairInfo(0, "", "", "volume")
@@ -10,7 +15,7 @@ def getVolumeInfo(pairInfo: classes.CoinPairBasic, workingInfo: classes.WorkingI
     return(coinsDicts)
 
 
-def getLastPriceInfo(pairInfo: classes.CoinPairBasic, coinsDicts: classes.CoinSearcher, workingInfo: classes.WorkingInfo, time: str):
+def getLastPriceInfo(pairInfo: classes.CoinPairBasic,  workingInfo: classes.WorkingInfo, coinsDicts: classes.CoinSearcher, time: str):
     tmpInfo = classes.TmpPairInfo(0, "", "", "lastPrice")
     coinsDicts = common.calculations(workingInfo, coinsDicts, tmpInfo, pairInfo.lastPrice, time)
     return(coinsDicts)
@@ -23,10 +28,12 @@ def sortThroughPairs(coinsDicts: classes.DictsSaver, workingInfo: classes.Workin
             # print(errMessage)
             continue
         coinsDicts = common.createDictsSaverElements(pairInfo.pairName, coinsDicts)
-        coinsDicts.coinsDictVolume[pairInfo.pairName], errMessage, err = getVolumeInfo(pairInfo, workingInfo, coinsDicts.coinsDictVolume[pairInfo.pairName], time)
+        # coinsDicts.coinsDictVolume[pairInfo.pairName], errMessage, err = getVolumeInfo(pairInfo, workingInfo, coinsDicts.coinsDictVolume[pairInfo.pairName], time)
+        coinsDicts.coinsDictVolume[pairInfo.pairName], errMessage, err = getVolume(workingInfo, coinsDicts.coinsDictVolume[pairInfo.pairName], pairInfo.volume, time, "volume")
         if err == 3:
             continue
-        coinsDicts.coinsDictLastPrice[pairInfo.pairName], errMessage, err = getLastPriceInfo(pairInfo, workingInfo, coinsDicts.coinsDictLastPrice[pairInfo.pairName], time)
+        # coinsDicts.coinsDictLastPrice[pairInfo.pairName], errMessage, err = getLastPriceInfo(pairInfo, workingInfo, coinsDicts.coinsDictLastPrice[pairInfo.pairName], time)
+        coinsDicts.coinsDictLastPrice[pairInfo.pairName], errMessage, err = getVolume(workingInfo, coinsDicts.coinsDictLastPrice[pairInfo.pairName], pairInfo.lastPrice, time, "lastPrice")
         if err == 3:
             continue
     return(coinsDicts) # err
