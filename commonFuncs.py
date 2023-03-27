@@ -170,22 +170,43 @@ def trimDict(trimedDict: dict, delimeter: int):
 
 
 
-def checkValuesWithMoreThenMaxPersent(coinSearcher: classes.CoinSearcher, timeAndMaxPersentDict: dict, timeItem: float, percent: float, localMaxPercent: float):
+# def checkValuesWithMoreThenMaxPersent(coinSearcher: classes.CoinSearcher, timeAndMaxPersentDict: dict, timeItem: float, percent: float, localMaxPercent: float):
+#     if timeItem in timeAndMaxPersentDict:
+#         if abs(timeAndMaxPersentDict[timeItem]) < abs(percent):
+#             timeAndMaxPersentDict[timeItem] = percent
+#         if abs(localMaxPercent) < abs(timeAndMaxPersentDict[timeItem]):              
+#             localMaxPercent = timeAndMaxPersentDict[timeItem]
+#             # message = f"{tmpInfo.pairName} have changeced {tmpInfo.typeOfValue} from {timeItem} to {time} for {percent}%  !!!"
+#             # bot.sendMessage(message)
+#             testPrintMessage(f"checkValuesWithMoreThenMaxPersent in dir {coinSearcher.pairName}, {percent}")
+#     else:
+#         if abs(localMaxPercent) < abs(percent):              
+#             localMaxPercent = percent
+#             timeAndMaxPersentDict[timeItem] = percent
+#             # message = f"{tmpInfo.pairName} have changeced {tmpInfo.typeOfValue} from {timeItem} to {time} for {percent}%  !!!"
+#             # bot.sendMessage(message)
+#             testPrintMessage(f"checkValuesWithMoreThenMaxPersent not in dir {coinSearcher.pairName}, {percent}")
+#     return(timeAndMaxPersentDict, localMaxPercent)
+
+def checkValuesWithMoreThenMaxPersent(tmpInfo: classes.TmpPairInfo, coinSearcher: classes.CoinSearcher, timeAndMaxPersentDict: dict, timeItem: float, percent: float, message: str):
     if timeItem in timeAndMaxPersentDict:
         if abs(timeAndMaxPersentDict[timeItem]) < abs(percent):
             timeAndMaxPersentDict[timeItem] = percent
-        if abs(localMaxPercent) < abs(timeAndMaxPersentDict[timeItem]):              
-            localMaxPercent = timeAndMaxPersentDict[timeItem]
+        if abs(tmpInfo.maxPercent) < abs(timeAndMaxPersentDict[timeItem]):
+            tmpInfo.maxPercent = timeAndMaxPersentDict[timeItem]
             # message = f"{tmpInfo.pairName} have changeced {tmpInfo.typeOfValue} from {timeItem} to {time} for {percent}%  !!!"
             # bot.sendMessage(message)
-            testPrintMessage(f"{coinSearcher.pairName}, {percent}")
+            message += ""
+            testPrintMessage(f"checkValuesWithMoreThenMaxPersent in dir {coinSearcher.pairName}, {percent}")
     else:
-        if abs(localMaxPercent) < abs(percent):              
-            localMaxPercent = percent
+        if abs(tmpInfo.maxPercent) < abs(percent):
+            tmpInfo.maxPercent = percent
             timeAndMaxPersentDict[timeItem] = percent
             # message = f"{tmpInfo.pairName} have changeced {tmpInfo.typeOfValue} from {timeItem} to {time} for {percent}%  !!!"
             # bot.sendMessage(message)
-    return(timeAndMaxPersentDict, localMaxPercent)
+            message += ""
+            testPrintMessage(f"checkValuesWithMoreThenMaxPersent not in dir {coinSearcher.pairName}, {percent}")
+    return(timeAndMaxPersentDict, message)
 
 
 def cleanTmpInfoClass(tmpInfo: classes.TmpPairInfo):
@@ -214,54 +235,79 @@ def checkValuesWithInterestingPersent(tmpInfo: classes.TmpPairInfo, timeAndMaxPe
     return(tmpInfo, timeAndMaxPersentDict)
 
 
-def findMaxInDict(coinSearcher: classes.CoinSearcher, tmpInfo: classes.TmpPairInfo, workingInfo: classes.WorkingInfo, data: float, time: str):
-    localMaxPercent = 0
+# def findMaxInDict(coinSearcher: classes.CoinSearcher, tmpInfo: classes.TmpPairInfo, workingInfo: classes.WorkingInfo, data: float, time: str):
+#     localMaxPercent = 0
+#     for timeItem in coinSearcher.coinPairData:
+#         previosValue = coinSearcher.coinPairData[timeItem]
+#         if previosValue == 0:
+#             continue
+#         percent = calcPersent(data, previosValue)
+#         if abs(percent) < abs(workingInfo.notInterestingPercent):
+#             continue
+#         if abs(percent) >= abs(workingInfo.attentionPercent):    
+#             coinSearcher.timeAndMaxPersentDict, localMaxPercent = checkValuesWithMoreThenMaxPersent(coinSearcher, coinSearcher.timeAndMaxPersentDict, timeItem, percent, localMaxPercent)
+#             continue
+#         tmpInfo, coinSearcher.timeAndMaxPersentDict = checkValuesWithInterestingPersent(tmpInfo, coinSearcher.timeAndMaxPersentDict, timeItem, percent, time)
+
+#     if abs(tmpInfo.maxPercent) > abs(workingInfo.notInterestingPercent) and abs(localMaxPercent) < abs(tmpInfo.maxPercent):
+#             # message = f"{tmpInfo.pairName} have changeced {tmpInfo.typeOfValue} from {timeItem} to {time} for {percent}%"
+#             # bot.sendMessage(message)
+#         testPrintMessage(f"findMaxInDict {coinSearcher.pairName}, {percent}")
+#         pass
+#     tmpInfo = cleanTmpInfoClass(tmpInfo)
+#     return(coinSearcher.timeAndMaxPersentDict)
+
+
+def findMaxInDict(coinSearcher: classes.CoinSearcher, tmpInfo: classes.TmpPairInfo, workingInfo: classes.WorkingInfo, data: float, time: str, message: str):
     for timeItem in coinSearcher.coinPairData:
         previosValue = coinSearcher.coinPairData[timeItem]
         if previosValue == 0:
             continue
         percent = calcPersent(data, previosValue)
-        if abs(percent) < abs(workingInfo.notInterestingPercent):
+        if abs(percent) <= abs(workingInfo.notInterestingPercent):
             continue
         if abs(percent) >= abs(workingInfo.attentionPercent):    
-            coinSearcher.timeAndMaxPersentDict, localMaxPercent = checkValuesWithMoreThenMaxPersent(coinSearcher, coinSearcher.timeAndMaxPersentDict, timeItem, percent, localMaxPercent)
+            coinSearcher.timeAndMaxPersentDict, message = checkValuesWithMoreThenMaxPersent(tmpInfo, coinSearcher, coinSearcher.timeAndMaxPersentDict, timeItem, percent, message)
             continue
         tmpInfo, coinSearcher.timeAndMaxPersentDict = checkValuesWithInterestingPersent(tmpInfo, coinSearcher.timeAndMaxPersentDict, timeItem, percent, time)
 
-        if abs(tmpInfo.maxPercent) > abs(workingInfo.notInterestingPercent):
+    if abs(tmpInfo.maxPercent) > abs(workingInfo.notInterestingPercent):
             # message = f"{tmpInfo.pairName} have changeced {tmpInfo.typeOfValue} from {timeItem} to {time} for {percent}%"
             # bot.sendMessage(message)
-            testPrintMessage(f"{coinSearcher.pairName}, {percent}")
-            pass
-        tmpInfo = cleanTmpInfoClass(tmpInfo)
+        message += ""
+        testPrintMessage(f"findMaxInDict {coinSearcher.pairName}, {percent}")
+        pass
+    tmpInfo = cleanTmpInfoClass(tmpInfo)
     return(coinSearcher.timeAndMaxPersentDict)
 
 
 
 def calculations(workingInfo: classes.WorkingInfo, coinsDicts: classes.CoinSearcher, tmpInfo: classes.TmpPairInfo, data: float,time: str):
     coinsDicts.coinPairData, err = checkBeginig(coinsDicts.coinPairData, data, time)
+    message = ""
     if err == 3:
-        return(coinsDicts, "", 3)
+        return(coinsDicts, message, "", 3)
     lastTimeOfValue, lastValue, errMessage, err = getLastValueFromDict(coinsDicts.coinPairData) # переменные нужны для формирования сообщения
     if err == 2:
-        return(coinsDicts, "", 3)
+        return(coinsDicts, message, "", 3)
     elif err == 3 or lastValue == 0:
         coinsDicts.coinPairData[time] = data
-        return(coinsDicts, "", 0)
+        return(coinsDicts, message, "", 0)
     percent = calcPersent(data, lastValue)
-    if abs(percent) >= abs(workingInfo.notInterestingPercent):
+    if abs(percent) <= abs(workingInfo.notInterestingPercent):
         coinsDicts.coinPairData[time] = data
-        return(coinsDicts, "", 0)
+        return(coinsDicts, message, "", 0)
     if abs(percent) >= abs(workingInfo.attentionPercent):
         coinsDicts.timeAndMaxPersentDict[time] = percent
         # здесь должно быть оповещение
         # bot.sendMessage(message)
-        testPrintMessage(f"{coinsDicts.pairName}, {percent}")
+        message += ""
+        testPrintMessage(f"calculations {coinsDicts.pairName}, {percent}")
         pass
     coinsDicts.coinPairData = trimDict(coinsDicts.coinPairData, workingInfo.delimeter)
     coinsDicts.timeAndMaxPersentDict = trimDict(coinsDicts.timeAndMaxPersentDict, workingInfo.delimeter)
-    coinsDicts.timeAndMaxPersentDict = findMaxInDict(coinsDicts, tmpInfo, workingInfo, data, time)
+    coinsDicts.timeAndMaxPersentDict, message = findMaxInDict(coinsDicts, tmpInfo, workingInfo, data, time, message)
     coinsDicts.coinPairData[time] = data
-    return(coinsDicts, "", 0)
+    return(coinsDicts, message, "", 0)
 
 

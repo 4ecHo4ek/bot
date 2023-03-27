@@ -46,9 +46,10 @@ class BotClass():
 
 # класс для сохранения значений для каждой пары
 class DictsSaver:
-    def __init__(self, coinsDictVolume: dict, coinsDictLastPrice: dict) -> None:
+    def __init__(self, coinsDictVolume: dict, coinsDictLastPrice: dict, message: str) -> None:
         self.coinsDictVolume = coinsDictVolume
         self.coinsDictLastPrice = coinsDictLastPrice
+        self.message = message
 
 
 class CoinPairBasic:
