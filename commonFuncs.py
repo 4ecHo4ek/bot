@@ -16,8 +16,7 @@ def trimString(string: str) -> str:
 
 
 def findDataInReadedFile(lines: list[str]): #-> dict, dict:
-    workingInfoDict = {"delimeter": 0, "deltaPercent": 0, "logFile": "", "maxPersent": 0, "steps": 0, "api_key": "", "api_secret": ""}
-    botClassDict = {"telegram_token": "", "chat_id": ""}
+    workingInfoDict = {"delimeter": 0, "deltaPercent": 0, "logFile": "", "maxPersent": 0, "steps": 0, "api_key": "", "api_secret": "", "url": "", "port": ""}
     for line in lines:
         if 'delimeter' in line:
             workingInfoDict["delimeter"] = int(trimString(line))
@@ -33,11 +32,11 @@ def findDataInReadedFile(lines: list[str]): #-> dict, dict:
             workingInfoDict["api_key"] = trimString(line)
         elif 'api_secret' in line:
             workingInfoDict["api_secret"] = trimString(line)
-        elif 'telegram_token' in line:
-            botClassDict["telegram_token"] = trimString(line)
-        elif 'chat_id' in line:
-            botClassDict["chat_id"] = int(trimString(line))
-    return(workingInfoDict, botClassDict)
+        elif 'url' in line:
+            workingInfoDict["url"] = trimString(line)
+        elif 'port' in line:
+            workingInfoDict["port"] = int(trimString(line))
+    return(workingInfoDict)
 
 
 def getDataFromFile(fileName: str):
@@ -47,10 +46,14 @@ def getDataFromFile(fileName: str):
         try:
             with open(fileName,'r') as file:
                 lines = file.readlines()
-                (workingInfoDict, botClassDict) = findDataInReadedFile(lines)
-                workingInfo = classes.WorkingInfo(workingInfoDict["delimeter"], workingInfoDict["deltaPercent"], workingInfoDict["logFile"], workingInfoDict["maxPersent"], workingInfoDict["steps"], workingInfoDict["api_key"], workingInfoDict["api_secret"])
-                bot = classes.BotClass(botClassDict["telegram_token"], botClassDict["chat_id"])
-            return(errMessage, err, workingInfo, bot)
+                (workingInfoDict) = findDataInReadedFile(lines)
+                workingInfo = classes.WorkingInfo(workingInfoDict["delimeter"], workingInfoDict["deltaPercent"], 
+                                                  workingInfoDict["logFile"], workingInfoDict["maxPersent"],
+                                                  workingInfoDict["steps"], workingInfoDict["api_key"], 
+                                                  workingInfoDict["api_secret"], workingInfoDict["url"], 
+                                                  workingInfoDict["port"]
+                                                  )
+            return(errMessage, err, workingInfo)
         except:
             errMessage = f"could read fild {fileName}\n"
             err = 1
@@ -114,16 +117,12 @@ def waitNewMinute():
 
 
 
-def getConnectionsToResources(bot: classes.BotClass, workingInfo: classes.WorkingInfo):
-    try:
-        bot = classes.BotClass(bot.telegram_token, bot.chat_id)
-    except:
-        return(None, None, "Could not connect to bot", 1)
+def getConnectionsToResources(workingInfo: classes.WorkingInfo):
     try:
         client = mod.Client(workingInfo.api_key, workingInfo.api_secret)
     except:
         return(None, None, f"Could not connect to server {client}", 1)
-    return(bot, client, "", 0)
+    return(client, "", 0)
 
 
 def checkBeginig(coinPairData: dict, data: float, time: str):
@@ -278,7 +277,7 @@ def findMaxInDict(coinSearcher: classes.CoinSearcher, tmpInfo: classes.TmpPairIn
         testPrintMessage(f"findMaxInDict {coinSearcher.pairName}, {percent}")
         pass
     tmpInfo = cleanTmpInfoClass(tmpInfo)
-    return(coinSearcher.timeAndMaxPersentDict)
+    return(coinSearcher.timeAndMaxPersentDict, message)
 
 
 

@@ -6,19 +6,7 @@ import classes as classes
 def getVolume(workingInfo: classes.WorkingInfo, coinsDicts: classes.CoinSearcher,  data: float, time: str, type: str):
     tmpInfo = classes.TmpPairInfo(0, "", "", type)
     coinsDicts, message, errMessage, err = common.calculations(workingInfo, coinsDicts, tmpInfo, data, time)
-    return(coinsDicts)
-
-
-# def getVolumeInfo(pairInfo: classes.CoinPairBasic, workingInfo: classes.WorkingInfo, coinsDicts: classes.CoinSearcher, time: str):
-#     tmpInfo = classes.TmpPairInfo(0, "", "", "volume")
-#     coinsDicts = common.calculations(workingInfo, coinsDicts, tmpInfo, pairInfo.volume, time)
-#     return(coinsDicts)
-
-
-# def getLastPriceInfo(pairInfo: classes.CoinPairBasic,  workingInfo: classes.WorkingInfo, coinsDicts: classes.CoinSearcher, time: str):
-#     tmpInfo = classes.TmpPairInfo(0, "", "", "lastPrice")
-#     coinsDicts = common.calculations(workingInfo, coinsDicts, tmpInfo, pairInfo.lastPrice, time)
-#     return(coinsDicts)
+    return(coinsDicts, message, errMessage, err)
 
 
 def sortThroughPairs(coinsDicts: classes.DictsSaver, workingInfo: classes.WorkingInfo, pairs: dict, time: str):
@@ -36,15 +24,31 @@ def sortThroughPairs(coinsDicts: classes.DictsSaver, workingInfo: classes.Workin
         coinsDicts.coinsDictLastPrice[pairInfo.pairName], coinsDicts.message, errMessage, err = getVolume(workingInfo, coinsDicts.coinsDictLastPrice[pairInfo.pairName], pairInfo.lastPrice, time, "lastPrice")
         if err == 3:
             continue
+
+        # if pairInfo.pairName == "IDEUR":
+        #     print(pairInfo.pairName)
+        #     coinsDicts.message += "one\n"
+        #     coinsDicts.message += "two\n"
+
     return(coinsDicts) # err
 
-        
+
+def botLogs(workingInfo: classes.WorkingInfo, r):
+    if r.status_code == 500:
+        common.writeLog(workingInfo.logFileName, "error", f"uncorrect reques to server {r.status_code} {r.reason}")
+    elif r.status_code == 404:
+        common.writeLog(workingInfo.logFileName, "error", f"bot error {r.status_code} {r.reason}")
+    elif r.status_code != 200:
+        common.writeLog(workingInfo.logFileName, "error", f"connetion to bot failed {r.status_code} {r.reason}")
+    print(r.status_code, r.reason)
+
+
 def mainFunc(fileName: str) -> None:
-    errMessage, err, workingInfo, bot = common.getDataFromFile(fileName)
+    errMessage, err, workingInfo = common.getDataFromFile(fileName)
     if err:
         print(errMessage)
         exit
-    bot, client, errMessage, err = common.getConnectionsToResources(bot, workingInfo)
+    client, errMessage, err = common.getConnectionsToResources(workingInfo)
     if err == 1:
         common.writeLog(workingInfo.logFileName, "error", errMessage)
         exit
@@ -53,19 +57,17 @@ def mainFunc(fileName: str) -> None:
 
     coinsDicts = classes.DictsSaver({}, {}, "")
     while True:
-        # common.waitNewMinute()
+        common.waitNewMinute()
         pairs, errMessage, err = common.getInfo(client)
         if err == 2:
             common.writeLog(workingInfo.logFileName, "error", errMessage)
             continue
         time = f"{mod.datetime.datetime.now().hour}:{mod.datetime.datetime.now().minute}"
         coinsDicts = sortThroughPairs(coinsDicts, workingInfo, pairs, time)
-        print(coinsDicts.message)
         if len(coinsDicts.message) > 0:
-            r = mod.requests.post('http://127.0.0.1:5000/sendMessage', json={'message': coinsDicts.message})
-            if r.status_code != 200:
-                common.writeLog(workingInfo.logFileName, "error", f"connetion to bot failed {r.status_code} {r.reason}")
-                print(r.status_code, r.reason)
+            r = mod.requests.post(f"{workingInfo.url}:{workingInfo.port}/sendMessage", json={'message': coinsDicts.message})
+            coinsDicts.message = ""
+            botLogs(workingInfo, r)
         mod.time.sleep(3)
 
 

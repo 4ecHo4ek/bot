@@ -2,7 +2,7 @@ import modules as mod
 
 # рабочая информация о настройках поиска и работы
 class WorkingInfo:
-    def __init__(self, delimeter: int, deltaPercent: float, logFileName: str, maxPersent: float, steps: int, api_key: str, api_secret: str) -> None:
+    def __init__(self, delimeter: int, deltaPercent: float, logFileName: str, maxPersent: float, steps: int, api_key: str, api_secret: str, url: str, port: int) -> None:
         # макисмальный рассматриваемый диапазон по времени в минутах
         self.delimeter = delimeter
         # разница в проценте, после которой обращаем вниманиеб пока не используется
@@ -16,6 +16,8 @@ class WorkingInfo:
         # бинансовые потраха
         self.api_key = api_key
         self.api_secret = api_secret
+        self.url = url
+        self.port = port
         # получаем массив с процентами, по которым будем проводить выборку
         self.persentArraysForLooking = [maxPersent]
 
@@ -31,17 +33,6 @@ class WorkingInfo:
         arrLen = int(len(interestArr) / 2)
         # получаем максимальный процент, после которого сразу оповещаеть
         self.attentionPercent = round(float(interestArr[arrLen]), 2)
-
-
-class BotClass():
-    def __init__(self, telegram_token: str, chat_id: int) -> None:
-        self.telegram_token = telegram_token
-        self.chat_id = chat_id
-        
-
-    def sendMessage(self, message) -> None:
-        bot = mod.telebot.TeleBot(self.telegram_token)
-        bot.send_message(self.chat_id, message)
 
 
 # класс для сохранения значений для каждой пары
