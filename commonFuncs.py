@@ -7,6 +7,14 @@ def testPrintMessage(message):
     print(message)
 
 
+def createMessage(message: str, pairName: str, typeOfValue: str, persent: float, timeBegin: str, timeEnd: str):
+    if typeOfValue == "volume":
+        message += f"Объем первой монеты в паре {pairName} изменился на "
+    elif typeOfValue == "lastPrice":
+        message += f"Цена в паре {pairName} изменилась на "
+    message += f"{persent}% с {timeBegin} по {timeEnd}\n"
+    return(message)
+
 
 def trimString(string: str) -> str:
     string = string[string.find(":") + 1:]
@@ -195,16 +203,14 @@ def checkValuesWithMoreThenMaxPersent(tmpInfo: classes.TmpPairInfo, coinSearcher
             tmpInfo.maxPercent = timeAndMaxPersentDict[timeItem]
             # message = f"{tmpInfo.pairName} have changeced {tmpInfo.typeOfValue} from {timeItem} to {time} for {percent}%  !!!"
             # bot.sendMessage(message)
-            message += ""
-            testPrintMessage(f"checkValuesWithMoreThenMaxPersent in dir {coinSearcher.pairName}, {percent}")
+            message += createMessage(message, coinSearcher.pairName, tmpInfo.typeOfValue, percent, tmpInfo.tBegin, tmpInfo.tEnd)
     else:
         if abs(tmpInfo.maxPercent) < abs(percent):
             tmpInfo.maxPercent = percent
             timeAndMaxPersentDict[timeItem] = percent
             # message = f"{tmpInfo.pairName} have changeced {tmpInfo.typeOfValue} from {timeItem} to {time} for {percent}%  !!!"
             # bot.sendMessage(message)
-            message += ""
-            testPrintMessage(f"checkValuesWithMoreThenMaxPersent not in dir {coinSearcher.pairName}, {percent}")
+            message += createMessage(message, coinSearcher.pairName, tmpInfo.typeOfValue, percent, tmpInfo.tBegin, tmpInfo.tEnd)
     return(timeAndMaxPersentDict, message)
 
 
@@ -266,24 +272,22 @@ def findMaxInDict(coinSearcher: classes.CoinSearcher, tmpInfo: classes.TmpPairIn
         if abs(percent) <= abs(workingInfo.notInterestingPercent):
             continue
         if abs(percent) >= abs(workingInfo.attentionPercent):    
-            coinSearcher.timeAndMaxPersentDict, message = checkValuesWithMoreThenMaxPersent(tmpInfo, coinSearcher, coinSearcher.timeAndMaxPersentDict, timeItem, percent, message)
+            coinSearcher.timeAndMaxPersentDict, message = checkValuesWithMoreThenMaxPersent(tmpInfo, coinSearcher, 
+                                                                                            coinSearcher.timeAndMaxPersentDict, 
+                                                                                            timeItem, percent, message)
             continue
-        tmpInfo, coinSearcher.timeAndMaxPersentDict = checkValuesWithInterestingPersent(tmpInfo, coinSearcher.timeAndMaxPersentDict, timeItem, percent, time)
+        tmpInfo, coinSearcher.timeAndMaxPersentDict = checkValuesWithInterestingPersent(tmpInfo, coinSearcher.timeAndMaxPersentDict, 
+                                                                                        timeItem, percent, time)
 
     if abs(tmpInfo.maxPercent) > abs(workingInfo.notInterestingPercent):
-            # message = f"{tmpInfo.pairName} have changeced {tmpInfo.typeOfValue} from {timeItem} to {time} for {percent}%"
-            # bot.sendMessage(message)
-        message += ""
-        testPrintMessage(f"findMaxInDict {coinSearcher.pairName}, {percent}")
-        pass
+        message += createMessage(message, coinSearcher.pairName, tmpInfo.typeOfValue, percent, tmpInfo.tBegin, tmpInfo.tEnd)
     tmpInfo = cleanTmpInfoClass(tmpInfo)
     return(coinSearcher.timeAndMaxPersentDict, message)
 
 
 
-def calculations(workingInfo: classes.WorkingInfo, coinsDicts: classes.CoinSearcher, tmpInfo: classes.TmpPairInfo, data: float,time: str):
+def calculations(workingInfo: classes.WorkingInfo, coinsDicts: classes.CoinSearcher, tmpInfo: classes.TmpPairInfo, data: float, time: str, message: str):
     coinsDicts.coinPairData, err = checkBeginig(coinsDicts.coinPairData, data, time)
-    message = ""
     if err == 3:
         return(coinsDicts, message, "", 3)
     lastTimeOfValue, lastValue, errMessage, err = getLastValueFromDict(coinsDicts.coinPairData) # переменные нужны для формирования сообщения
@@ -300,8 +304,7 @@ def calculations(workingInfo: classes.WorkingInfo, coinsDicts: classes.CoinSearc
         coinsDicts.timeAndMaxPersentDict[time] = percent
         # здесь должно быть оповещение
         # bot.sendMessage(message)
-        message += ""
-        testPrintMessage(f"calculations {coinsDicts.pairName}, {percent}")
+        message = createMessage(message, coinsDicts.pairName, tmpInfo.typeOfValue, percent, lastTimeOfValue, time)
         pass
     coinsDicts.coinPairData = trimDict(coinsDicts.coinPairData, workingInfo.delimeter)
     coinsDicts.timeAndMaxPersentDict = trimDict(coinsDicts.timeAndMaxPersentDict, workingInfo.delimeter)
@@ -309,4 +312,13 @@ def calculations(workingInfo: classes.WorkingInfo, coinsDicts: classes.CoinSearc
     coinsDicts.coinPairData[time] = data
     return(coinsDicts, message, "", 0)
 
+
+def botLogs(workingInfo: classes.WorkingInfo, r):
+    if r.status_code == 500:
+        writeLog(workingInfo.logFileName, "error", f"uncorrect reques to server {r.status_code} {r.reason}")
+    elif r.status_code == 404:
+        writeLog(workingInfo.logFileName, "error", f"bot error {r.status_code} {r.reason}")
+    elif r.status_code != 200:
+        writeLog(workingInfo.logFileName, "error", f"connetion to bot failed {r.status_code} {r.reason}")
+    print(r.status_code, r.reason)
 
