@@ -1,11 +1,12 @@
 import modules as mod
 import commonFuncs as common
 import classes as classes
+import calculating as calc
 
 
 def getVolume(workingInfo: classes.WorkingInfo, coinsDicts: classes.CoinSearcher,  data: float, time: str, type: str, message: str):
     tmpInfo = classes.TmpPairInfo(0, "", "", type)
-    coinsDicts, message, errMessage, err = common.calculations(workingInfo, coinsDicts, tmpInfo, data, time, message)
+    coinsDicts, message, errMessage, err = calc.calculations(workingInfo, coinsDicts, tmpInfo, data, time, message)
     return(coinsDicts, message, errMessage, err)
 
 
@@ -14,8 +15,13 @@ def sortThroughPairs(coinsDicts: classes.DictsSaver, workingInfo: classes.Workin
     for pair in pairs:
         pairInfo, errMessage, err = common.getInfoFromDictOfPairs(pair)
         if err == 3:
-            print(errMessage)
+            # print(errMessage)
             continue
+
+        # TEST
+        if pairInfo.pairName == "WINGUSDT":
+            print(pair)
+
         coinsDicts = common.createDictsSaverElements(pairInfo.pairName, coinsDicts)
         coinsDicts.coinsDictVolume[pairInfo.pairName], coinsDicts.message, errMessage, err = getVolume(workingInfo, 
                                                                                                        coinsDicts.coinsDictVolume[pairInfo.pairName], 
@@ -27,6 +33,13 @@ def sortThroughPairs(coinsDicts: classes.DictsSaver, workingInfo: classes.Workin
         coinsDicts.coinsDictLastPrice[pairInfo.pairName], coinsDicts.message, errMessage, err = getVolume(workingInfo, 
                                                                                                           coinsDicts.coinsDictLastPrice[pairInfo.pairName], 
                                                                                                           pairInfo.lastPrice, time, "lastPrice", coinsDicts.message)
+        if len(errMessage) > 0:
+            common.writeLog(workingInfo.logFileName, "error", errMessage)
+        elif err == 3:
+            continue
+        coinsDicts.coinsDictQuoteVolume[pairInfo.pairName], coinsDicts.message, errMessage, err = getVolume(workingInfo, 
+                                                                                                          coinsDicts.coinsDictQuoteVolume[pairInfo.pairName], 
+                                                                                                          pairInfo.lastPrice, time, "quoteVolume", coinsDicts.message)
         if len(errMessage) > 0:
             common.writeLog(workingInfo.logFileName, "error", errMessage)
         elif err == 3:
@@ -47,7 +60,7 @@ def mainFunc(fileName: str) -> None:
 
     print(f"nothing interesting less the {workingInfo.notInterestingPercent}% and much interest up {workingInfo.attentionPercent}%")
 
-    coinsDicts = classes.DictsSaver({}, {}, "", "")
+    coinsDicts = classes.DictsSaver({}, {}, {}, "")
     while True:
         common.waitNewMinute()
         pairs, errMessage, err = common.getInfo(client)
