@@ -31,11 +31,10 @@ class WorkingInfo:
 
 # класс для сохранения значений для каждой пары
 class DictsSaver:
-    def __init__(self, coinsDictVolume: dict, coinsDictLastPrice: dict, coinsDictQuoteVolume: dict, message: str) -> None:
+    def __init__(self, coinsDictVolume: dict, coinsDictLastPrice: dict, coinsDictQuoteVolume: dict) -> None:
         self.coinsDictVolume = coinsDictVolume
         self.coinsDictLastPrice = coinsDictLastPrice
         self.coinsDictQuoteVolume = coinsDictQuoteVolume
-        self.message = message
 
 
 class CoinPairBasic:

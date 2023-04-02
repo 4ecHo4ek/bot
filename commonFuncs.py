@@ -2,18 +2,52 @@ import modules as mod
 import classes as classes
 
 
+def writeLog(logFile, type, message):
+    '''
+    функция для написания лога
+    '''
+    if not mod.os.path.exists('logs'):
+        mod.os.makedirs('logs')
+    time = mod.time.strftime("%Y-%m-%d %H:%M:%S", mod.time.localtime())
+    if type == "warnig":
+        type = "WARNING"
+    elif type == "error":
+        type = "ERROR"
+    elif type == "info":
+        type = "INFO"
+    message = f"{time}\t{type}\t{message}\n"
+    print(message)
+    with open(mod.os.path.join("logs", logFile), "a", encoding='utf-8') as file:
+        file.writelines(message)
+
+
+
+def sendMessage(workingInfo: classes.WorkingInfo, message: str):
+    try:
+        r = mod.requests.post(f"{workingInfo.url}:{workingInfo.port}/sendMessage", json={'message': f"{message}\n"})
+    except:
+        writeLog(workingInfo.logFileName, "error", f"could not send message to {workingInfo.url}:{workingInfo.port}/sendMessage")
+        return
+    if r.status_code == 500:
+        writeLog(workingInfo.logFileName, "error", f"uncorrect reques to server {r.status_code} {r.reason}")
+    elif r.status_code == 404:
+        writeLog(workingInfo.logFileName, "error", f"bot error {r.status_code} {r.reason}")
+    elif r.status_code != 200:
+        writeLog(workingInfo.logFileName, "error", f"connetion to bot failed {r.status_code} {r.reason}")
+
+
 # составление сообщения для отправки
-def createMessage(message: str, pairName: str, typeOfValue: str, persent: float, timeBegin: str, timeEnd: str):
+def createMessage(pairName: str, typeOfValue: str, persent: float, timeBegin: str, timeEnd: str):
     '''
     составляем сообщение для отправки
     '''
     if typeOfValue == "volume":
-        message += f"(ожидается СНИЖЕНИЕ цены {pairName})\n Объем первой монеты в паре {pairName} изменился на "
+        message = f"(ожидается СНИЖЕНИЕ цены {pairName}) Объем первой монеты в паре {pairName} изменился на "
     elif typeOfValue == "lastPrice":
-        message += f"Цена в паре {pairName} изменилась на "
+        message = f"Цена в паре {pairName} изменилась на "
     elif typeOfValue == "quoteVolume":
-        message += f"(ожидается УВЕЛЕЧЕНИЕ цены {pairName})\n Объем второй монеты в паре {pairName} изменился на "
-    message += f"{persent}% с {timeBegin} по {timeEnd}\n"
+        message = f"(ожидается УВЕЛЕЧЕНИЕ цены {pairName}) Объем второй монеты в паре {pairName} изменился на "
+    message += f"{persent}% с {timeBegin} по {timeEnd}"
     return(message)
 
 
@@ -83,23 +117,6 @@ def getDataFromFile(fileName: str):
         return(errMessage, err, None)
     
 
-def writeLog(logFile, type, message):
-    '''
-    функция для написания лога
-    '''
-    if not mod.os.path.exists('logs'):
-        mod.os.makedirs('logs')
-    time = mod.time.strftime("%Y-%m-%d %H:%M:%S", mod.time.localtime())
-    if type == "warnig":
-        type = "WARNING"
-    elif type == "error":
-        type = "ERROR"
-    elif type == "info":
-        type = "INFO"
-    message = f"{time}\t{type}\t{message}"
-    mod.os.system(f"echo {message} >> logs\\{logFile}")
-
-
 def createDictsSaverElements(pairName: str, coinsDicts: classes.DictsSaver):
     '''
     создаем словари для хранения инфорации
@@ -165,7 +182,7 @@ def getConnectionsToResources(workingInfo: classes.WorkingInfo):
     try:
         client = mod.Client(workingInfo.api_key, workingInfo.api_secret)
     except:
-        return(None, None, f"Could not connect to server {client}", 1)
+        return(None, None, f"Could not connect to server", 1)
     return(client, "", 0)
 
 
@@ -225,12 +242,5 @@ def fullTmpInfoClass(tmpInfo: classes.TmpPairInfo, timeItem: float, percent: flo
     return(tmpInfo)
 
 
-def botLogs(workingInfo: classes.WorkingInfo, r):
-    if r.status_code == 500:
-        writeLog(workingInfo.logFileName, "error", f"uncorrect reques to server {r.status_code} {r.reason}")
-    elif r.status_code == 404:
-        writeLog(workingInfo.logFileName, "error", f"bot error {r.status_code} {r.reason}")
-    elif r.status_code != 200:
-        writeLog(workingInfo.logFileName, "error", f"connetion to bot failed {r.status_code} {r.reason}")
-    print(r.status_code, r.reason)
 
+    
