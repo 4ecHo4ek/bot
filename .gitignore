@@ -2,3 +2,4 @@ values.yaml
 __pycache__
 logs
 test.*
+*.rar

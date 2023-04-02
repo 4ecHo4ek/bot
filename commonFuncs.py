@@ -2,12 +2,11 @@ import modules as mod
 import classes as classes
 
 
-# TEST
-def testPrintMessage(message):
-    print(message)
-
-
+# составление сообщения для отправки
 def createMessage(message: str, pairName: str, typeOfValue: str, persent: float, timeBegin: str, timeEnd: str):
+    '''
+    составляем сообщение для отправки
+    '''
     if typeOfValue == "volume":
         message += f"Объем первой монеты в паре {pairName} изменился на "
     elif typeOfValue == "lastPrice":
@@ -17,13 +16,20 @@ def createMessage(message: str, pairName: str, typeOfValue: str, persent: float,
 
 
 def trimString(string: str) -> str:
+    '''
+    разделение строки для получения информации из файла
+    '''
     string = string[string.find(":") + 1:]
     if string[0] == " ":
-        string = string[1:].replace("\n", "")
+        string = string[1:]
+        string = string.replace("\n", "")
     return(string)
 
 
-def findDataInReadedFile(lines: list[str]): #-> dict, dict:
+def findDataInReadedFile(lines: list[str]):
+    '''
+    составление информации и заполнение в словари для хранения и инициализации классов
+    '''
     workingInfoDict = {"delimeter": 0, "deltaPercent": 0, "logFile": "", "maxPersent": 0, "steps": 0, "api_key": "", "api_secret": "", "url": "", "port": ""}
     for line in lines:
         if 'delimeter' in line:
@@ -48,6 +54,9 @@ def findDataInReadedFile(lines: list[str]): #-> dict, dict:
 
 
 def getDataFromFile(fileName: str):
+    '''
+    получаем информацию из файла
+    '''
     err = 0
     errMessage = ""
     if mod.os.path.exists(fileName):
@@ -65,14 +74,17 @@ def getDataFromFile(fileName: str):
         except:
             errMessage = f"could read fild {fileName}\n"
             err = 1
-            return(errMessage, err, None, None)
+            return(errMessage, err, None)
     else:
         errMessage = f"could not fild {fileName}\n"
         err = 1
-        return(errMessage, err, None, None)
+        return(errMessage, err, None)
     
 
 def writeLog(logFile, type, message):
+    '''
+    функция для написания лога
+    '''
     if not mod.os.path.exists('logs'):
         mod.os.makedirs('logs')
     time = mod.time.strftime("%Y-%m-%d %H:%M:%S", mod.time.localtime())
@@ -87,6 +99,10 @@ def writeLog(logFile, type, message):
 
 
 def createDictsSaverElements(pairName: str, coinsDicts: classes.DictsSaver):
+    '''
+    создаем словари для хранения инфорации
+    о рассматриваемых данных
+    '''
     # если в словаре нет ключа с такой парой
     if not pairName in coinsDicts.coinsDictVolume:
         # присваиваем этому ключу экземпляр класса
@@ -97,18 +113,29 @@ def createDictsSaverElements(pairName: str, coinsDicts: classes.DictsSaver):
 
 
 def getInfoFromDictOfPairs(pair: dict):
-    pairName = pair['symbol']
-    if float(pair['bidPrice']) == 0.00000000:
-            return(None, f"{pairName} does not trade!", 3)
-    lastPrice = round(float(pair['lastPrice']), 2)
-    volume = round(float(pair['volume']), 2)
-    quoteVolume = round(float(pair['quoteVolume']), 2)
-    pairInfo = classes.CoinPairBasic(pairName, lastPrice, volume, quoteVolume)
+    '''
+    получаем информацию о паре
+    '''
+    try:
+        pairName = pair['symbol']
+        if float(pair['bidPrice']) == 0.00000000:
+                return(None, None, 3)
+        lastPrice = round(float(pair['lastPrice']), 2)
+        volume = round(float(pair['volume']), 2)
+        quoteVolume = round(float(pair['quoteVolume']), 2)
+        pairInfo = classes.CoinPairBasic(pairName, lastPrice, volume, quoteVolume)
+    except:
+        pairInfo = classes.CoinPairBasic("", 0, 0, 0)
+        message = f"somthihg wrong with getting info in getInfoFromDictOfPairs - {pair}"
+        return(pairInfo, message, 3)
     return(pairInfo, None, 0)
 
 
 
 def getInfo(client: mod.Client):
+    '''
+    получаем инфорацию от сервера
+    '''
     # получаем значения рынка
     try:
         pairs = mod.Client.ticker_24hr(client)
@@ -118,6 +145,9 @@ def getInfo(client: mod.Client):
 
 
 def waitNewMinute():
+    '''
+    функция для ожидания
+    '''
     message = f"wait {60 - int(mod.datetime.datetime.now().second)} seconds before continue"
     print(message)
     while (int(mod.datetime.datetime.now().second) > 1):
@@ -126,6 +156,9 @@ def waitNewMinute():
 
 
 def getConnectionsToResources(workingInfo: classes.WorkingInfo):
+    '''
+    подключаемся к серверу
+    '''
     try:
         client = mod.Client(workingInfo.api_key, workingInfo.api_secret)
     except:
@@ -152,7 +185,7 @@ def getLastValueFromDict(coinPairData: dict):
         [lastValueTime] = mod.collections.deque(coinPairData, maxlen=1)
         lastValue = coinPairData[lastValueTime]
     except:
-        return(None, None, "", 2)
+        return(None, None, f"dict - {coinPairData}", 2)
     if lastValue == 0:
         err == 3
     return(lastValueTime, lastValue, "", err)
@@ -164,6 +197,10 @@ def calcPersent(currentValue: float, lastValue: float):
 
 
 def trimDict(trimedDict: dict, delimeter: int):
+    '''
+    ограничиваем словари до велечины
+    delimeter - количество минут, которые храним
+    '''
     if len(trimedDict) > delimeter:
         lenOfDict = len(trimedDict)
         tmpList = list(trimedDict)
@@ -175,41 +212,20 @@ def trimDict(trimedDict: dict, delimeter: int):
     return(trimedDict)
 
 
-
-
-# def checkValuesWithMoreThenMaxPersent(coinSearcher: classes.CoinSearcher, timeAndMaxPersentDict: dict, timeItem: float, percent: float, localMaxPercent: float):
-#     if timeItem in timeAndMaxPersentDict:
-#         if abs(timeAndMaxPersentDict[timeItem]) < abs(percent):
-#             timeAndMaxPersentDict[timeItem] = percent
-#         if abs(localMaxPercent) < abs(timeAndMaxPersentDict[timeItem]):              
-#             localMaxPercent = timeAndMaxPersentDict[timeItem]
-#             # message = f"{tmpInfo.pairName} have changeced {tmpInfo.typeOfValue} from {timeItem} to {time} for {percent}%  !!!"
-#             # bot.sendMessage(message)
-#             testPrintMessage(f"checkValuesWithMoreThenMaxPersent in dir {coinSearcher.pairName}, {percent}")
-#     else:
-#         if abs(localMaxPercent) < abs(percent):              
-#             localMaxPercent = percent
-#             timeAndMaxPersentDict[timeItem] = percent
-#             # message = f"{tmpInfo.pairName} have changeced {tmpInfo.typeOfValue} from {timeItem} to {time} for {percent}%  !!!"
-#             # bot.sendMessage(message)
-#             testPrintMessage(f"checkValuesWithMoreThenMaxPersent not in dir {coinSearcher.pairName}, {percent}")
-#     return(timeAndMaxPersentDict, localMaxPercent)
-
 def checkValuesWithMoreThenMaxPersent(tmpInfo: classes.TmpPairInfo, coinSearcher: classes.CoinSearcher, timeAndMaxPersentDict: dict, timeItem: float, percent: float, message: str):
+    '''
+    поиск интересующего процента
+    '''
     if timeItem in timeAndMaxPersentDict:
         if abs(timeAndMaxPersentDict[timeItem]) < abs(percent):
             timeAndMaxPersentDict[timeItem] = percent
         if abs(tmpInfo.maxPercent) < abs(timeAndMaxPersentDict[timeItem]):
             tmpInfo.maxPercent = timeAndMaxPersentDict[timeItem]
-            # message = f"{tmpInfo.pairName} have changeced {tmpInfo.typeOfValue} from {timeItem} to {time} for {percent}%  !!!"
-            # bot.sendMessage(message)
             message += createMessage(message, coinSearcher.pairName, tmpInfo.typeOfValue, percent, tmpInfo.tBegin, tmpInfo.tEnd)
     else:
         if abs(tmpInfo.maxPercent) < abs(percent):
             tmpInfo.maxPercent = percent
             timeAndMaxPersentDict[timeItem] = percent
-            # message = f"{tmpInfo.pairName} have changeced {tmpInfo.typeOfValue} from {timeItem} to {time} for {percent}%  !!!"
-            # bot.sendMessage(message)
             message += createMessage(message, coinSearcher.pairName, tmpInfo.typeOfValue, percent, tmpInfo.tBegin, tmpInfo.tEnd)
     return(timeAndMaxPersentDict, message)
 
@@ -240,29 +256,6 @@ def checkValuesWithInterestingPersent(tmpInfo: classes.TmpPairInfo, timeAndMaxPe
     return(tmpInfo, timeAndMaxPersentDict)
 
 
-# def findMaxInDict(coinSearcher: classes.CoinSearcher, tmpInfo: classes.TmpPairInfo, workingInfo: classes.WorkingInfo, data: float, time: str):
-#     localMaxPercent = 0
-#     for timeItem in coinSearcher.coinPairData:
-#         previosValue = coinSearcher.coinPairData[timeItem]
-#         if previosValue == 0:
-#             continue
-#         percent = calcPersent(data, previosValue)
-#         if abs(percent) < abs(workingInfo.notInterestingPercent):
-#             continue
-#         if abs(percent) >= abs(workingInfo.attentionPercent):    
-#             coinSearcher.timeAndMaxPersentDict, localMaxPercent = checkValuesWithMoreThenMaxPersent(coinSearcher, coinSearcher.timeAndMaxPersentDict, timeItem, percent, localMaxPercent)
-#             continue
-#         tmpInfo, coinSearcher.timeAndMaxPersentDict = checkValuesWithInterestingPersent(tmpInfo, coinSearcher.timeAndMaxPersentDict, timeItem, percent, time)
-
-#     if abs(tmpInfo.maxPercent) > abs(workingInfo.notInterestingPercent) and abs(localMaxPercent) < abs(tmpInfo.maxPercent):
-#             # message = f"{tmpInfo.pairName} have changeced {tmpInfo.typeOfValue} from {timeItem} to {time} for {percent}%"
-#             # bot.sendMessage(message)
-#         testPrintMessage(f"findMaxInDict {coinSearcher.pairName}, {percent}")
-#         pass
-#     tmpInfo = cleanTmpInfoClass(tmpInfo)
-#     return(coinSearcher.timeAndMaxPersentDict)
-
-
 def findMaxInDict(coinSearcher: classes.CoinSearcher, tmpInfo: classes.TmpPairInfo, workingInfo: classes.WorkingInfo, data: float, time: str, message: str):
     for timeItem in coinSearcher.coinPairData:
         previosValue = coinSearcher.coinPairData[timeItem]
@@ -290,9 +283,9 @@ def calculations(workingInfo: classes.WorkingInfo, coinsDicts: classes.CoinSearc
     coinsDicts.coinPairData, err = checkBeginig(coinsDicts.coinPairData, data, time)
     if err == 3:
         return(coinsDicts, message, "", 3)
-    lastTimeOfValue, lastValue, errMessage, err = getLastValueFromDict(coinsDicts.coinPairData) # переменные нужны для формирования сообщения
+    lastTimeOfValue, lastValue, errMessage, err = getLastValueFromDict(coinsDicts.coinPairData)
     if err == 2:
-        return(coinsDicts, message, "", 3)
+        return(coinsDicts, message, errMessage, 3)
     elif err == 3 or lastValue == 0:
         coinsDicts.coinPairData[time] = data
         return(coinsDicts, message, "", 0)
@@ -302,8 +295,6 @@ def calculations(workingInfo: classes.WorkingInfo, coinsDicts: classes.CoinSearc
         return(coinsDicts, message, "", 0)
     if abs(percent) >= abs(workingInfo.attentionPercent):
         coinsDicts.timeAndMaxPersentDict[time] = percent
-        # здесь должно быть оповещение
-        # bot.sendMessage(message)
         message = createMessage(message, coinsDicts.pairName, tmpInfo.typeOfValue, percent, lastTimeOfValue, time)
         pass
     coinsDicts.coinPairData = trimDict(coinsDicts.coinPairData, workingInfo.delimeter)

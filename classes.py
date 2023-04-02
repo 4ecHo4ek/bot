@@ -19,28 +19,23 @@ class WorkingInfo:
         self.url = url
         self.port = port
         # получаем массив с процентами, по которым будем проводить выборку
-        self.persentArraysForLooking = [maxPersent]
+        self.persentArraysForLooking = []
 
         # TODO продумать как вытаскивать эти проценты для сравнения
-        for _ in range(1, steps):
-            maxPersent = maxPersent / 2
-            self.persentArraysForLooking.append(maxPersent)
-        arrLen = int(len(self.persentArraysForLooking) / 2)
-        interestArr = self.persentArraysForLooking[:arrLen + 1]
-        # получаем минимальную границу, ниже которой не рассматриваем значения
-        self.notInterestingPercent = round(float(self.persentArraysForLooking[arrLen]), 2)
-        # в промежутке между нижней и верхней границей оповещаем только о макисмальном %, и продумать как отсеивать незначительный рост
-        arrLen = int(len(interestArr) / 2)
-        # получаем максимальный процент, после которого сразу оповещаеть
-        self.attentionPercent = round(float(interestArr[arrLen]), 2)
+        for i in range(1, steps + 1):
+            self.persentArraysForLooking.append(round(maxPersent / mod.math.sqrt(i), 3))
+        self.notInterestingPercent = self.persentArraysForLooking[-1]
+        self.attentionPercent = self.persentArraysForLooking[int(len(self.persentArraysForLooking) / 2) - int(len(self.persentArraysForLooking) / 4)]
+
 
 
 # класс для сохранения значений для каждой пары
 class DictsSaver:
-    def __init__(self, coinsDictVolume: dict, coinsDictLastPrice: dict, message: str) -> None:
+    def __init__(self, coinsDictVolume: dict, coinsDictLastPrice: dict, message: str, errMessage: str) -> None:
         self.coinsDictVolume = coinsDictVolume
         self.coinsDictLastPrice = coinsDictLastPrice
         self.message = message
+        self.errMessage = errMessage
 
 
 class CoinPairBasic:
