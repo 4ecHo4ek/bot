@@ -1,8 +1,9 @@
 from flask import Flask, request, jsonify
 import telebot
-from twilio import twiml
+# from twilio import twiml
 import sys
 import os
+import subprocess
 
 
 app = Flask(__name__)
@@ -42,12 +43,26 @@ def getDataFromFile(fileName: str):
 
 
 @app.route('/sendMessage', methods=['POST']) 
-def foo():
+def sendMessage():
     data = request.json
     message = data["message"]
     bot = telebot.TeleBot(telegram_token)
     bot.send_message(chat_id, message)
     return jsonify(data)
+
+
+@app.route('/startTradeBot', methods=['POST']) 
+def startTradeBot():
+    data = request.json
+    pairName = data["pairName"]
+
+    subprocess.Popen([sys.executable, "test.py", pairName])
+
+
+
+
+    return jsonify(data)
+
 
 
 

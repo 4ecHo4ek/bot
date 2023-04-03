@@ -243,4 +243,8 @@ def fullTmpInfoClass(tmpInfo: classes.TmpPairInfo, timeItem: float, percent: flo
 
 
 
-    
+def testDataCollecting(pairName, message):
+    if pairName == "PHAUSDT":
+        writeLog("data.log", "info", message)
+
+

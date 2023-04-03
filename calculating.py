@@ -15,9 +15,8 @@ def checkValuesWithMoreThenMaxPersent(workingInfo: classes.WorkingInfo, tmpInfo:
     '''
     message = ""
     if timeItem in timeAndMaxPersentDict:
-        if abs(timeAndMaxPersentDict[timeItem]) < abs(percent):
+        if abs(timeAndMaxPersentDict[timeItem]) < abs(percent) and abs(tmpInfo.maxPercent) < abs(percent):
             timeAndMaxPersentDict[timeItem] = percent
-        if abs(tmpInfo.maxPercent) < abs(timeAndMaxPersentDict[timeItem]):
             tmpInfo = common.fullTmpInfoClass(tmpInfo, timeItem, percent, time)
             message = common.createMessage(coinSearcher.pairName, tmpInfo.typeOfValue, percent, tmpInfo.tBegin, tmpInfo.tEnd)
     else:
@@ -50,12 +49,21 @@ def findMaxInDict(coinSearcher: classes.CoinSearcher, tmpInfo: classes.TmpPairIn
         if previosValue == 0:
             continue
         percent = calcPersent(data, previosValue)
+
+        common.testDataCollecting(coinSearcher.pairName, f"findMaxInDict - percent - {percent} / data, previosValue - {data, previosValue}") # TEST
+    
         if abs(percent) <= abs(workingInfo.notInterestingPercent):
             continue
-        if abs(percent) >= abs(workingInfo.attentionPercent):    
+        if abs(percent) >= abs(workingInfo.attentionPercent):
+
+            common.testDataCollecting(coinSearcher.pairName, f"findMaxInDict - before checkValuesWithMoreThenMaxPersent len(coinSearcher.timeAndMaxPersentDict) - {len(coinSearcher.timeAndMaxPersentDict)}") # TEST
+    
             coinSearcher.timeAndMaxPersentDict, tmpInfo = checkValuesWithMoreThenMaxPersent(workingInfo, tmpInfo, coinSearcher, 
                                                                                             coinSearcher.timeAndMaxPersentDict, 
                                                                                             timeItem, time, percent)
+            
+            common.testDataCollecting(coinSearcher.pairName, f"findMaxInDict - after checkValuesWithMoreThenMaxPersent len(coinSearcher.timeAndMaxPersentDict) - {len(coinSearcher.timeAndMaxPersentDict)}") # TEST
+    
             continue
         tmpInfo, coinSearcher.timeAndMaxPersentDict = checkValuesWithInterestingPersent(tmpInfo, coinSearcher.timeAndMaxPersentDict, 
                                                                                         timeItem, percent, time)
@@ -74,16 +82,23 @@ def calculations(workingInfo: classes.WorkingInfo, coinsDicts: classes.CoinSearc
     if err == 3:
         return(coinsDicts, "", 3)
     lastTimeOfValue, lastValue, errMessage, err = common.getLastValueFromDict(coinsDicts.coinPairData)
+
+    common.testDataCollecting(coinsDicts.pairName, f"calculations - lastTimeOfValue, lastValue - {lastTimeOfValue, lastValue}") # TEST
+    
     if err == 2:
         return(coinsDicts, errMessage, 3)
     elif err == 3 or lastValue == 0:
         coinsDicts.coinPairData[time] = data
         return(coinsDicts, "", 0)
     percent = calcPersent(data, lastValue)
+    coinsDicts.coinPairData[time] = data
+    
+    common.testDataCollecting(coinsDicts.pairName, f"calculations - len(coinsDicts.coinPairData) - {len(coinsDicts.coinPairData)}, percent - {percent}") # TEST
+    
     if abs(percent) <= abs(workingInfo.notInterestingPercent):
-        coinsDicts.coinPairData[time] = data
+        coinsDicts.coinPairData = common.trimDict(coinsDicts.coinPairData, workingInfo.delimeter)
         return(coinsDicts, "", 0)
-    if abs(percent) >= abs(workingInfo.attentionPercent):
+    elif abs(percent) >= abs(workingInfo.attentionPercent):
         coinsDicts.timeAndMaxPersentDict[time] = percent
         message = common.createMessage(coinsDicts.pairName, tmpInfo.typeOfValue, percent, lastTimeOfValue, time)
         common.sendMessage(workingInfo, message)
@@ -91,8 +106,10 @@ def calculations(workingInfo: classes.WorkingInfo, coinsDicts: classes.CoinSearc
     coinsDicts.coinPairData = common.trimDict(coinsDicts.coinPairData, workingInfo.delimeter)
     coinsDicts.timeAndMaxPersentDict = common.trimDict(coinsDicts.timeAndMaxPersentDict, workingInfo.delimeter)
     coinsDicts.timeAndMaxPersentDict = findMaxInDict(coinsDicts, tmpInfo, workingInfo, data, time)
+
+    common.testDataCollecting(coinsDicts.pairName, f"calculations - len(coinsDicts.timeAndMaxPersentDict) - {len(coinsDicts.timeAndMaxPersentDict)}, coinsDicts.timeAndMaxPersentDict - {coinsDicts.timeAndMaxPersentDict}") # TEST
+    common.testDataCollecting(coinsDicts.pairName, f"calculations - len(coinsDicts.coinPairData) - {len(coinsDicts.coinPairData)}, coinsDicts.coinPairData - {coinsDicts.coinPairData}") # TEST
     
-    coinsDicts.coinPairData[time] = data
     return(coinsDicts, "", 0)
 
 
