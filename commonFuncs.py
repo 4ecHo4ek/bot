@@ -26,14 +26,14 @@ def sendMessage(workingInfo: classes.WorkingInfo, message: str):
     try:
         r = mod.requests.post(f"{workingInfo.url}:{workingInfo.port}/sendMessage", json={'message': f"{message}\n"})
     except:
-        writeLog(workingInfo.logFileName, "error", f"could not send message to {workingInfo.url}:{workingInfo.port}/sendMessage")
+        writeLog(workingInfo.logFileName, "error", f"sendMessage | could not send message to {workingInfo.url}:{workingInfo.port}/sendMessage")
         return
     if r.status_code == 500:
-        writeLog(workingInfo.logFileName, "error", f"uncorrect reques to server {r.status_code} {r.reason}")
+        writeLog(workingInfo.logFileName, "error", f"sendMessage | uncorrect reques to server {r.status_code} {r.reason}")
     elif r.status_code == 404:
-        writeLog(workingInfo.logFileName, "error", f"bot error {r.status_code} {r.reason}")
+        writeLog(workingInfo.logFileName, "error", f"sendMessage | bot error {r.status_code} {r.reason}")
     elif r.status_code != 200:
-        writeLog(workingInfo.logFileName, "error", f"connetion to bot failed {r.status_code} {r.reason}")
+        writeLog(workingInfo.logFileName, "error", f"sendMessage | connetion to bot failed {r.status_code} {r.reason}")
 
 
 # составление сообщения для отправки
@@ -135,19 +135,20 @@ def createDictsSaverElements(pairName: str, coinsDicts: classes.DictsSaver):
 def getInfoFromDictOfPairs(pair: dict):
     '''
     получаем информацию о паре
+    err == 2 - пустая пара, пропускаем без записи в лог
     '''
     try:
         pairName = pair['symbol']
         if float(pair['bidPrice']) == 0.00000000:
-                return(None, None, 3)
+            return(classes.CoinPairBasic(None, None, None, None), "pair does not trade", 2)
         lastPrice = round(float(pair['lastPrice']), 2)
         volume = round(float(pair['volume']), 2)
         quoteVolume = round(float(pair['quoteVolume']), 2)
-        pairInfo = classes.CoinPairBasic(pairName, lastPrice, volume, quoteVolume)
     except:
         pairInfo = classes.CoinPairBasic("", 0, 0, 0)
         message = f"somthihg wrong with getting info in getInfoFromDictOfPairs - {pair}"
-        return(pairInfo, message, 3)
+        return(classes.CoinPairBasic(None, None, None, None), message, 3)
+    pairInfo = classes.CoinPairBasic(pairName, lastPrice, volume, quoteVolume)
     return(pairInfo, None, 0)
 
 
@@ -243,8 +244,12 @@ def fullTmpInfoClass(tmpInfo: classes.TmpPairInfo, timeItem: float, percent: flo
 
 
 
-def testDataCollecting(pairName, message):
-    if pairName == "PHAUSDT":
-        writeLog("data.log", "info", message)
+def getTime():
+    if mod.datetime.datetime.now().minute < 10:
+        minutes = f"0{mod.datetime.datetime.now().minute}"
+    else:
+        minutes = f"{mod.datetime.datetime.now().minute}"
+    time = f"{mod.datetime.datetime.now().hour}:{minutes}"
+    return(time)
 
 

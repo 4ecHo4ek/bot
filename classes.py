@@ -51,7 +51,7 @@ class CoinSearcher:
         # храним предыдущее значение для сравнения
         self.coinPairData = coinPairData
         # словарь для хранения времени и максимального процента, который был относительно этого времени (для уменьшения повторных срабатываний)
-        self.timeAndMaxPersentDict = timeAndMaxPersentDict
+        self.timeAndMaxPersentDict = timeAndMaxPersentDict #?
 
 
 # запоминаем крайние значения для сверки с последующим

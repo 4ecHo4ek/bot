@@ -11,59 +11,64 @@ def getVolume(workingInfo: classes.WorkingInfo, coinsDicts: classes.CoinSearcher
 
 
 def sortThroughPairs(coinsDicts: classes.DictsSaver, workingInfo: classes.WorkingInfo, pairs: dict, time: str):
-    coinsDicts.message = ""
+
     for pair in pairs:
         pairInfo, errMessage, err = common.getInfoFromDictOfPairs(pair)
-        if err == 3:
-            # print(errMessage)
-            continue
 
+        if err == 3:
+            common.writeLog(workingInfo.logFileName, "error", f"sortThroughPairs | getInfoFromDictOfPairs | {errMessage}")
+            continue
+        elif err == 2:
+            continue
         coinsDicts = common.createDictsSaverElements(pairInfo.pairName, coinsDicts)
+
         coinsDicts.coinsDictVolume[pairInfo.pairName], errMessage, err = getVolume( workingInfo, 
                                                                                     coinsDicts.coinsDictVolume[pairInfo.pairName], 
                                                                                     pairInfo.volume, time, "volume")
         if len(errMessage) > 0:
-            common.writeLog(workingInfo.logFileName, "error", errMessage)
+            common.writeLog(workingInfo.logFileName, "error", f"sortThroughPairs | coinsDictVolume | {errMessage}")
         elif err == 3:
             continue
         coinsDicts.coinsDictLastPrice[pairInfo.pairName], errMessage, err = getVolume(  workingInfo, 
                                                                                         coinsDicts.coinsDictLastPrice[pairInfo.pairName], 
                                                                                         pairInfo.lastPrice, time, "lastPrice")
         if len(errMessage) > 0:
-            common.writeLog(workingInfo.logFileName, "error", errMessage)
+            common.writeLog(workingInfo.logFileName, "error", f"sortThroughPairs | coinsDictLastPrice | {errMessage}")
         elif err == 3:
             continue
         coinsDicts.coinsDictQuoteVolume[pairInfo.pairName], errMessage, err = getVolume(workingInfo, 
                                                                                         coinsDicts.coinsDictQuoteVolume[pairInfo.pairName], 
                                                                                         pairInfo.lastPrice, time, "quoteVolume")
         if len(errMessage) > 0:
-            common.writeLog(workingInfo.logFileName, "error", errMessage)
+            common.writeLog(workingInfo.logFileName, "error", f"sortThroughPairs | coinsDictQuoteVolume | {errMessage}")
         elif err == 3:
             continue
 
-    return(coinsDicts) # err
+    return(coinsDicts)
 
 
 def mainFunc(fileName: str) -> None:
     errMessage, err, workingInfo = common.getDataFromFile(fileName)
     if err == 1:
-        common.writeLog(workingInfo.logFileName, "error", errMessage)
+        common.writeLog(workingInfo.logFileName, "error", f"mainFunc | getDataFromFile | {errMessage}")
         exit(2)
     client, errMessage, err = common.getConnectionsToResources(workingInfo)
     if err == 1:
-        common.writeLog(workingInfo.logFileName, "error", errMessage)
+        common.writeLog(workingInfo.logFileName, "error", f"mainFunc | getConnectionsToResources | {errMessage}")
         exit(2)
 
     print(f"nothing interesting less the {workingInfo.notInterestingPercent}% and much interest up {workingInfo.attentionPercent}%")
-
     coinsDicts = classes.DictsSaver({}, {}, {})
+
     while True:
         common.waitNewMinute()
         pairs, errMessage, err = common.getInfo(client)
         if err == 2:
-            common.writeLog(workingInfo.logFileName, "error", errMessage)
+            common.writeLog(workingInfo.logFileName, "error", f"mainFunc | getInfo | {errMessage}")
             continue
-        time = f"{mod.datetime.datetime.now().hour}:{mod.datetime.datetime.now().minute}"
+
+        time = common.getTime()
+
         coinsDicts = sortThroughPairs(coinsDicts, workingInfo, pairs, time)
         mod.time.sleep(3)
 
@@ -75,4 +80,4 @@ if __name__ == "__main__":
         print ("\ngive values file\n")
 
 
-# зделать вывод лога в одном месте, вначале собираем всю инфу и передаем ее, потом в 1 момент выводим
+
