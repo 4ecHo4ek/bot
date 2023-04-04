@@ -13,4 +13,17 @@
 
 
 
+# client.new_order(symbol="LTCUSDT", side="SELL", type="MARKET", quantity=0.2)
 
+# pairs = Client.ticker_24hr(client)
+# print(pairs)
+
+# {
+#   "timeInForce": "GTC",
+#     "type": "STOP_LOSS",
+#     price: 123123123,
+#     quantity: 13,
+#     stopPrice: 123123
+# }
+
+https://binance-docs.github.io/apidocs/spot/en/#new-order-trade
