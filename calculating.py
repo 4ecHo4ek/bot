@@ -16,10 +16,14 @@ def findMaxInDict(coinSearcher: classes.CoinSearcher, tmpInfo: classes.TmpPairIn
             continue
         percent = calcPersent(data, previosValue)
         coinSearcher.timeAndMaxPersentDict[time] = percent
+        if coinSearcher.pairName == "BTCUSDT":
+            print(coinSearcher.timeAndMaxPersentDict)
+        maxPrivPersent = max(list(coinSearcher.timeAndMaxPersentDict.values()))
+       
 
         if abs(percent) <= abs(workingInfo.notInterestingPercent):
             continue
-        if abs(percent) >= abs(workingInfo.attentionPercent):
+        if abs(percent) >= abs(workingInfo.attentionPercent) and abs(percent) > abs(tmpInfo.maxPercent):
             tmpInfo.maxPercent = percent
             message = common.createMessage(coinSearcher.pairName, tmpInfo.typeOfValue, percent, timeItem, time)
             common.sendMessage(workingInfo, message)
@@ -28,13 +32,15 @@ def findMaxInDict(coinSearcher: classes.CoinSearcher, tmpInfo: classes.TmpPairIn
         
         if abs(percent) > abs(tmpInfo.maxPercent):
             tmpInfo.maxPercent = percent
-            if abs(percent) > abs(max(coinSearcher.timeAndMaxPersentDict.values())):
+            if abs(percent) > abs(maxPrivPersent):
                 tmpInfo = common.fullTmpInfoClass(tmpInfo, timeItem, percent, time)
 
-    if abs(tmpInfo.maxPercent) > abs(max(coinSearcher.timeAndMaxPersentDict.values(), default=0.0)) and abs(tmpInfo.maxPercent) > abs(workingInfo.notInterestingPercent):
-        message = common.createMessage(coinSearcher.pairName, tmpInfo.typeOfValue, percent, timeItem, time)
-        common.sendMessage(workingInfo, message)
-        common.writeLog(workingInfo.logFileName, "info", f"findMaxInDict | {message}") # TEST
+    if len(coinSearcher.coinPairData) and len(coinSearcher.timeAndMaxPersentDict):
+        if abs(tmpInfo.maxPercent) > abs(maxPrivPersent) and abs(tmpInfo.maxPercent) > abs(workingInfo.notInterestingPercent):
+            common.writeLog(workingInfo.logFileName, "info", f"findMaxInDict | tmpInfo.maxPercent - {tmpInfo.maxPercent}, maxPrivPersent - {maxPrivPersent}, tmpInfo.maxPercent - {tmpInfo.maxPercent}, workingInfo.notInterestingPercent - {workingInfo.notInterestingPercent}") # TEST
+            message = common.createMessage(coinSearcher.pairName, tmpInfo.typeOfValue, percent, timeItem, time)
+            common.sendMessage(workingInfo, message)
+            common.writeLog(workingInfo.logFileName, "info", f"findMaxInDict | {message}") # TEST
 
     tmpInfo = common.cleanTmpInfoClass(tmpInfo)
     return(coinSearcher)

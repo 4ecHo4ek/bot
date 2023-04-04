@@ -16,7 +16,7 @@ def writeLog(logFile, type, message):
     elif type == "info":
         type = "INFO"
     message = f"{time}\t{type}\t{message}\n"
-    print(message)
+    # print(message)
     with open(mod.os.path.join("logs", logFile), "a", encoding='utf-8') as file:
         file.writelines(message)
 
@@ -36,17 +36,28 @@ def sendMessage(workingInfo: classes.WorkingInfo, message: str):
         writeLog(workingInfo.logFileName, "error", f"sendMessage | connetion to bot failed {r.status_code} {r.reason}")
 
 
+def makePrediction(persent: float, reverse: bool):
+    koef = 1
+    if reverse:
+        koef = -1
+    if koef * persent > 0:
+        prediction = "СНИЖЕНИЕ"
+    else:
+        prediction = "УВЕЛЕЧЕНИЕ"
+    return(prediction)
+
+
 # составление сообщения для отправки
 def createMessage(pairName: str, typeOfValue: str, persent: float, timeBegin: str, timeEnd: str):
     '''
     составляем сообщение для отправки
     '''
     if typeOfValue == "volume":
-        message = f"(ожидается СНИЖЕНИЕ цены {pairName}) Объем первой монеты в паре {pairName} изменился на "
+        message = f"(ожидается {makePrediction(persent, False)} цены {pairName}) Объем первой монеты в паре {pairName} изменился на "
     elif typeOfValue == "lastPrice":
         message = f"Цена в паре {pairName} изменилась на "
     elif typeOfValue == "quoteVolume":
-        message = f"(ожидается УВЕЛЕЧЕНИЕ цены {pairName}) Объем второй монеты в паре {pairName} изменился на "
+        message = f"(ожидается {makePrediction(persent, True)} цены {pairName}) Объем второй монеты в паре {pairName} изменился на "
     message += f"{persent}% с {timeBegin} по {timeEnd}"
     return(message)
 

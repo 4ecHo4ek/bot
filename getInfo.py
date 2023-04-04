@@ -57,7 +57,9 @@ def mainFunc(fileName: str) -> None:
         common.writeLog(workingInfo.logFileName, "error", f"mainFunc | getConnectionsToResources | {errMessage}")
         exit(2)
 
-    print(f"nothing interesting less the {workingInfo.notInterestingPercent}% and much interest up {workingInfo.attentionPercent}%")
+
+    common.writeLog(workingInfo.logFileName, "info", f"nothing interesting less the {workingInfo.notInterestingPercent}% and much interest up {workingInfo.attentionPercent}%") # TEST
+    
     coinsDicts = classes.DictsSaver({}, {}, {})
 
     while True:
